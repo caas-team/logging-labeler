@@ -33,6 +33,12 @@ spec:
             type: string
           metadata:
             type: object
+          targetLabel:
+            description: Label that will be taken from the target namespace and added
+              to watchNamespace
+            type: string
+        required:
+        - targetLabel
         type: object
     served: true
     storage: true

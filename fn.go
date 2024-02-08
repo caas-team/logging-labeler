@@ -13,8 +13,8 @@ import (
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/resource/composed"
 	"github.com/crossplane/function-sdk-go/response"
+	inputv1beta1 "github.com/crossplane/logging-labeler/input/v1beta1"
 	"github.com/kube-logging/logging-operator/pkg/sdk/logging/api/v1beta1"
-	// "github.com/crossplane/logging-labeler/input/v1beta1"
 )
 
 // Function returns whatever response you ask it to.
@@ -24,11 +24,14 @@ type Function struct {
 	log logging.Logger
 }
 
-const labelProjectId = "field.cattle.io/projectId"
-
 // RunFunction runs the Function.
 func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRequest) (*fnv1beta1.RunFunctionResponse, error) {
 	rsp := response.To(req, response.DefaultTTL)
+	in := &inputv1beta1.Input{}
+	if err := request.GetInput(req, in); err != nil {
+		response.Fatal(rsp, errors.Wrapf(err, "cannot get input from %T", req))
+		return rsp, nil
+	}
 
 	xr, err := request.GetObservedCompositeResource(req)
 	if err != nil {
@@ -52,7 +55,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 		return rsp, nil
 	}
 
-	projectid, ok := targetns.GetLabels()[labelProjectId]
+	projectid, ok := targetns.GetLabels()[in.TargetLabel]
 	if !ok {
 		response.Fatal(rsp, errors.New("cannot get project id"))
 		return rsp, nil
@@ -61,7 +64,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 	l := &v1beta1.Logging{}
 	l.Spec.ControlNamespace = ns
 	l.Spec.WatchNamespaceSelector = &metav1.LabelSelector{}
-	l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{labelProjectId: projectid}
+	l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{in.TargetLabel: projectid}
 
 	cd, err := composed.From(l)
 	if err != nil {

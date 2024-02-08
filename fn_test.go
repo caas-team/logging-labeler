@@ -16,6 +16,7 @@ import (
 	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/response"
+	inputv1beta1 "github.com/crossplane/logging-labeler/input/v1beta1"
 )
 
 func TestRunFunction(t *testing.T) {
@@ -37,6 +38,9 @@ func TestRunFunction(t *testing.T) {
 			reason: "The function should return a response with the desired state.",
 			args: args{
 				req: &fnv1beta1.RunFunctionRequest{
+					Input: resource.MustStructObject(&inputv1beta1.Input{
+						TargetLabel: "testLabel",
+					}),
 					Meta: &fnv1beta1.RequestMeta{Tag: "hello"},
 					Observed: &fnv1beta1.State{
 						Composite: &fnv1beta1.Resource{
@@ -73,7 +77,7 @@ func TestRunFunction(t *testing.T) {
 										"controlNamespace": "unit-test",
 										"watchNamespaceSelector": {
 											"matchLabels": {
-												"field.cattle.io/projectId": "test-project"
+												"testLabel": "test-project"
 											}
 										},
 										"allowClusterResourcesFromAllNamespaces": false,
@@ -114,7 +118,7 @@ func TestRunFunction(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "unit-test",
 			Labels: map[string]string{
-				labelProjectId: "test-project",
+				"testLabel": "test-project",
 			},
 		},
 	}, metav1.CreateOptions{}); err != nil {
