@@ -49,6 +49,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 	targetns, err := f.cs.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})
 	if err != nil {
 		response.Fatal(rsp, errors.Wrapf(err, "cannot get namespace %s", ns))
+		return rsp, nil
 	}
 
 	projectid, ok := targetns.GetLabels()[labelProjectId]
@@ -65,6 +66,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 	cd, err := composed.From(l)
 	if err != nil {
 		response.Fatal(rsp, errors.Wrapf(err, "cannot convert %T to %T", l, &composed.Unstructured{}))
+		return rsp, nil
 	}
 
 	desired[resource.Name("logging")] = &resource.DesiredComposed{Resource: cd}
