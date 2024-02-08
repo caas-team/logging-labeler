@@ -32,7 +32,6 @@ func (c *CLI) Run() error {
 	}
 
 	var config *rest.Config
-	err = nil
 	if c.OutOfCluster {
 		config, err = OutOfClusterConfig()
 	} else {
