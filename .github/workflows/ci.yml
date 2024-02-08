@@ -150,8 +150,8 @@ jobs:
         uses: docker/login-action@v3
         if: env.XPKG_ACCESS_ID != ''
         with:
-          registry: xpkg.upbound.io
-          username: ${{ secrets.XPKG_ACCESS_ID }}
+          registry: ghcr.io
+          username: ${{ env.XPKG_ACCESS_ID }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # If a version wasn't explicitly passed as a workflow_dispatch input we
