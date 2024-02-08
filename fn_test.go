@@ -4,12 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
-
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 
 	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
 	"github.com/crossplane/function-sdk-go/resource"
@@ -17,7 +19,6 @@ import (
 )
 
 func TestRunFunction(t *testing.T) {
-
 	type args struct {
 		ctx context.Context
 		req *fnv1beta1.RunFunctionRequest
@@ -33,24 +34,68 @@ func TestRunFunction(t *testing.T) {
 		want   want
 	}{
 		"ResponseIsReturned": {
-			reason: "The Function should return a fatal result if no input was specified",
+			reason: "The function should return a response with the desired state.",
 			args: args{
 				req: &fnv1beta1.RunFunctionRequest{
 					Meta: &fnv1beta1.RequestMeta{Tag: "hello"},
-					Input: resource.MustStructJSON(`{
-						"apiVersion": "template.fn.crossplane.io/v1beta1",
-						"kind": "Input",
-						"example": "Hello, world"
-					}`),
+					Observed: &fnv1beta1.State{
+						Composite: &fnv1beta1.Resource{
+							Resource: resource.MustStructJSON(`{
+								"apiVersion": "caas.telekom.de/v1alpha1",
+								"kind": "Logging",
+								"metadata": {
+									"name": "test-logging",
+									"namespace": "unit-test",
+									"generation": 1
+								},
+								"spec": {}
+							}`),
+						},
+					},
 				},
 			},
 			want: want{
 				rsp: &fnv1beta1.RunFunctionResponse{
 					Meta: &fnv1beta1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(response.DefaultTTL)},
-					Results: []*fnv1beta1.Result{
-						{
-							Severity: fnv1beta1.Severity_SEVERITY_NORMAL,
-							Message:  "I was run with input \"Hello, world\"!",
+					Desired: &fnv1beta1.State{
+						Resources: map[string]*fnv1beta1.Resource{
+							"logging": {
+								Resource: resource.MustStructJSON(`{
+									"apiVersion": "logging.banzaicloud.io/v1beta1",
+									"kind": "Logging",
+									"spec": {
+										"controlNamespace": "unit-test",
+										"watchNamespaceSelector": {
+											"matchLabels": {
+												"field.cattle.io/projectId": "test-project"
+											}
+										},
+										"allowClusterResourcesFromAllNamespaces": false,
+										"configCheck": {
+											"timeoutSeconds": 0
+										},
+										"enableRecreateWorkloadOnImmutableFieldChange": false,
+										"flowConfigCheckDisabled": false,
+										"skipInvalidResources": false
+									},
+									"status": {
+										"problemsCount": 0
+									}
+
+								}`),
+								// Resource: resource.MustStructObject(&v1beta1.Logging{
+								// 	TypeMeta: metav1.TypeMeta{
+								// 		Kind:       "Logging",
+								// 		APIVersion: "logging.banzaicloud.io/v1beta1",
+								// 	},
+								// 	Spec: v1beta1.LoggingSpec{
+								// 		ControlNamespace: "unit-test",
+								// 		WatchNamespaceSelector: &metav1.LabelSelector{
+								// 			MatchLabels: map[string]string{"field.cattle.io/projectId": "test-project"},
+								// 		},
+								// 	},
+								// }),
+							},
 						},
 					},
 				},
@@ -58,9 +103,22 @@ func TestRunFunction(t *testing.T) {
 		},
 	}
 
+	client := fake.NewSimpleClientset()
+	if _, err := client.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "unit-test",
+			Labels: map[string]string{
+				labelProjectId: "test-project",
+			},
+		},
+	}, metav1.CreateOptions{}); err != nil {
+		t.Errorf("client.CoreV1().Namespaces().Create(...): %v", err)
+	}
+
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			f := &Function{log: logging.NewNopLogger()}
+
+			f := &Function{log: logging.NewNopLogger(), cs: client}
 			rsp, err := f.RunFunction(tc.args.ctx, tc.args.req)
 
 			if diff := cmp.Diff(tc.want.rsp, rsp, protocmp.Transform()); diff != "" {

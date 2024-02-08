@@ -1,17 +1,24 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: function-template-go
+  name: logging-composition
 spec:
-  compositeTypeRef:
-    apiVersion: example.crossplane.io/v1
-    kind: XR
   mode: Pipeline
+  resources:
+    - name: Logging
+      base: 
+        apiVersion: logging.banzaicloud.io/v1beta1
+        kind: Logging
+        spec:
+          controlNamespace: ""
+          fluentd:
+            disablePvc: true
+  compositeTypeRef:
+    apiVersion: caas.telekom.de/v1alpha1
+    kind: XLogging
   pipeline:
-  - step: run-the-template
+  - step: get-labels
     functionRef:
-      name: function-template-go
-    input:
-      apiVersion: template.fn.crossplane.io/v1beta1
-      kind: Input
-      example: "Hello world"
+      name: logging-labeler
+    input: {}
+      
