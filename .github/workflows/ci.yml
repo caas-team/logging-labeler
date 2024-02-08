@@ -26,11 +26,11 @@ env:
   # This CI job will automatically push new builds to xpkg.upbound.io if the
   # XPKG_ACCESS_ID and XPKG_TOKEN secrets are set in the GitHub respository (or
   # organization) settings. Create a token at https://accounts.upbound.io.
-  XPKG_ACCESS_ID: ${{ secrets.XPKG_ACCESS_ID }}
+  XPKG_ACCESS_ID: ${{ secrets.DOCKER_USERNAME }}
 
   # The package to push, without a version tag. The default matches GitHub. For
   # example xpkg.upbound.io/crossplane/function-template-go.
-  XPKG: xpkg.upbound.io/${{ github.repository}}
+  XPKG: ghcr.io/${{ github.repository}}
 
   # The package version to push. The default is 0.0.0-gitsha.
   XPKG_VERSION: ${{ inputs.version }}
@@ -148,7 +148,7 @@ jobs:
         with:
           registry: xpkg.upbound.io
           username: ${{ secrets.XPKG_ACCESS_ID }}
-          password: ${{ secrets.XPKG_TOKEN }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # If a version wasn't explicitly passed as a workflow_dispatch input we
       # default to version v0.0.0-<git-commit-date>-<git-short-sha>, for example
