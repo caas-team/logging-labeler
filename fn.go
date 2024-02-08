@@ -44,7 +44,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 
 	_ = v1beta1.AddToScheme(composed.Scheme)
 
-	ns := xr.Resource.GetNamespace()
+	ns := xr.Resource.GetClaimReference().Namespace
 
 	targetns, err := f.cs.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})
 	if err != nil {

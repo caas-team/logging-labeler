@@ -42,13 +42,19 @@ func TestRunFunction(t *testing.T) {
 						Composite: &fnv1beta1.Resource{
 							Resource: resource.MustStructJSON(`{
 								"apiVersion": "caas.telekom.de/v1alpha1",
-								"kind": "Logging",
+								"kind": "XLogging",
 								"metadata": {
 									"name": "test-logging",
-									"namespace": "unit-test",
 									"generation": 1
 								},
-								"spec": {}
+								"spec": {
+									"claimRef": {
+										"apiVersion": "caas.telekom.de/v1alpha1",
+										"kind": "Logging",
+										"name": "test-logging",
+										"namespace": "unit-test"
+									}
+								}
 							}`),
 						},
 					},
