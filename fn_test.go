@@ -116,18 +116,6 @@ func TestRunFunction(t *testing.T) {
 									}
 
 								}`),
-								// Resource: resource.MustStructObject(&v1beta1.Logging{
-								// 	TypeMeta: metav1.TypeMeta{
-								// 		Kind:       "Logging",
-								// 		APIVersion: "logging.banzaicloud.io/v1beta1",
-								// 	},
-								// 	Spec: v1beta1.LoggingSpec{
-								// 		ControlNamespace: "unit-test",
-								// 		WatchNamespaceSelector: &metav1.LabelSelector{
-								// 			MatchLabels: map[string]string{"field.cattle.io/projectId": "test-project"},
-								// 		},
-								// 	},
-								// }),
 							},
 						},
 					},
