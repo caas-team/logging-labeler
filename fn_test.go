@@ -86,6 +86,29 @@ func TestRunFunction(t *testing.T) {
 										},
 										"enableRecreateWorkloadOnImmutableFieldChange": false,
 										"flowConfigCheckDisabled": false,
+										"fluentd": {
+											"compressConfigFile": false,
+											"disablePvc": false,
+											"enableMsgpackTimeSupport": false,
+											"livenessDefaultCheck": false,
+											"port": 0,
+											"readinessDefaultCheck": {
+												"bufferFileNumber": false,
+												"bufferFileNumberMax": 0,
+												"bufferFreeSpace": false,
+												"bufferFreeSpaceThreshold": 0,
+												"failureThreshold":         0,
+												"initialDelaySeconds":      0,
+												"periodSeconds":            0,
+												"successThreshold":         0,
+												"timeoutSeconds":           0
+											},
+											"tls": {
+												"enabled": false
+											},
+											"volumeMountChmod":      false,
+											"workers":               0
+										},
 										"skipInvalidResources": false
 									},
 									"status": {
