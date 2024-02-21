@@ -22,5 +22,5 @@ type Input struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// Label that will be taken from the target namespace and added to watchNamespace
-	TargetLabel string `json:"targetLabel"`
+	NamespaceLabel string `json:"namespaceLabel"`
 }

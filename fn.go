@@ -45,7 +45,10 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 		return rsp, nil
 	}
 
-	_ = v1beta1.AddToScheme(composed.Scheme)
+	if err := v1beta1.AddToScheme(composed.Scheme); err != nil {
+		response.Fatal(rsp, errors.Wrapf(err, "cannot add to scheme"))
+		return rsp, nil
+	}
 
 	ns := xr.Resource.GetClaimReference().Namespace
 
@@ -55,7 +58,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 		return rsp, nil
 	}
 
-	projectid, ok := targetns.GetLabels()[in.TargetLabel]
+	projectid, ok := targetns.GetLabels()[in.NamespaceLabel]
 	if !ok {
 		response.Fatal(rsp, errors.New("cannot get project id"))
 		return rsp, nil
@@ -64,7 +67,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 	l := &v1beta1.Logging{}
 	l.Spec.ControlNamespace = ns
 	l.Spec.WatchNamespaceSelector = &metav1.LabelSelector{}
-	l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{in.TargetLabel: projectid}
+	l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{in.NamespaceLabel: projectid}
 	l.Spec.FluentdSpec = &v1beta1.FluentdSpec{}
 
 	cd, err := composed.From(l)
@@ -73,7 +76,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 		return rsp, nil
 	}
 
-	desired[resource.Name("logging")] = &resource.DesiredComposed{Resource: cd}
+	desired["logging"] = &resource.DesiredComposed{Resource: cd}
 
 	f.log.Info("Desired composed resources", "desired", desired)
 

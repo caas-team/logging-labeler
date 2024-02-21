@@ -39,7 +39,7 @@ func TestRunFunction(t *testing.T) {
 			args: args{
 				req: &fnv1beta1.RunFunctionRequest{
 					Input: resource.MustStructObject(&inputv1beta1.Input{
-						TargetLabel: "testLabel",
+						NamespaceLabel: "testLabel",
 					}),
 					Meta: &fnv1beta1.RequestMeta{Tag: "hello"},
 					Observed: &fnv1beta1.State{
