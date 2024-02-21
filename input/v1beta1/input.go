@@ -21,7 +21,6 @@ import (
 type Input struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// Example is an example field. Replace it with whatever input you need. :)
-	Example string `json:"example"`
+	// Label that will be taken from the target namespace and added to watchNamespace
+	NamespaceLabel string `json:"namespaceLabel"`
 }

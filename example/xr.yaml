@@ -1,6 +1,7 @@
 # Replace this with your XR!
-apiVersion: example.crossplane.io/v1
-kind: XR
+apiVersion: caas.telekom.de/v1alpha1
+kind: Logging
 metadata:
   name: example-xr
+  namespace: microservices
 spec: {}
