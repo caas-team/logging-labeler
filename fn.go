@@ -69,7 +69,6 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 	l.Spec.ControlNamespace = ns
 	l.Spec.WatchNamespaceSelector = &metav1.LabelSelector{}
 	l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{in.NamespaceLabel: projectid}
-	l.Spec.FluentdSpec = nil
 
 	cd, err := composed.From(l)
 	if err != nil {
