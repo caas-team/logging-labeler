@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
@@ -60,7 +61,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 
 	projectid, ok := targetns.GetLabels()[in.NamespaceLabel]
 	if !ok {
-		response.Fatal(rsp, errors.New("cannot get project id"))
+		response.Fatal(rsp, fmt.Errorf("cannot get project id %s for namespace %s", projectid, targetns.GetName()))
 		return rsp, nil
 	}
 
@@ -68,7 +69,6 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 	l.Spec.ControlNamespace = ns
 	l.Spec.WatchNamespaceSelector = &metav1.LabelSelector{}
 	l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{in.NamespaceLabel: projectid}
-	l.Spec.FluentdSpec = &v1beta1.FluentdSpec{}
 
 	cd, err := composed.From(l)
 	if err != nil {
