@@ -25,6 +25,10 @@ type Function struct {
 	log logging.Logger
 }
 
+const (
+	loggingName = "logging"
+)
+
 // RunFunction runs the Function.
 func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRequest) (*fnv1beta1.RunFunctionResponse, error) {
 	rsp := response.To(req, response.DefaultTTL)
@@ -65,18 +69,35 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 		return rsp, nil
 	}
 
-	l := &v1beta1.Logging{}
-	l.Spec.ControlNamespace = ns
-	l.Spec.WatchNamespaceSelector = &metav1.LabelSelector{}
-	l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{in.NamespaceLabel: projectid}
-
-	cd, err := composed.From(l)
+	cr, err := request.GetObservedComposedResources(req)
 	if err != nil {
-		response.Fatal(rsp, errors.Wrapf(err, "cannot convert %T to %T", l, &composed.Unstructured{}))
+		response.Fatal(rsp, errors.Wrapf(err, "cannot get observed composed resources"))
 		return rsp, nil
 	}
 
-	desired["logging"] = &resource.DesiredComposed{Resource: cd}
+	var cd *composed.Unstructured
+
+	if obsLogging, ok := cr[loggingName]; !ok {
+		l := &v1beta1.Logging{}
+		l.Spec.ControlNamespace = ns
+		l.Spec.WatchNamespaceSelector = &metav1.LabelSelector{}
+		l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{in.NamespaceLabel: projectid}
+		cd, err = composed.From(l)
+		if err != nil {
+			response.Fatal(rsp, errors.Wrapf(err, "cannot convert %T to %T", l, &composed.Unstructured{}))
+			return rsp, nil
+		}
+	} else {
+		// add to desired state and set ready
+		cd, err = composed.From(obsLogging.Resource)
+		if err != nil {
+			response.Fatal(rsp, errors.Wrapf(err, "cannot convert %T to %T", obsLogging.Resource, composed.Unstructured{}))
+			return rsp, nil
+		}
+		rsp.Desired.Composite.Ready = fnv1beta1.Ready_READY_TRUE
+	}
+
+	desired[loggingName] = &resource.DesiredComposed{Resource: cd}
 
 	f.log.Info("Desired composed resources", "desired", desired)
 
