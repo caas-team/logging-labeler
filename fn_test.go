@@ -70,6 +70,7 @@ func TestRunFunction(t *testing.T) {
 					Desired: &fnv1beta1.State{
 						Resources: map[string]*fnv1beta1.Resource{
 							"logging": {
+								Ready: fnv1beta1.Ready_READY_TRUE,
 								Resource: resource.MustStructJSON(`{
 									"apiVersion": "logging.banzaicloud.io/v1beta1",
 									"kind": "Logging",
