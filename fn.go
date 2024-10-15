@@ -76,7 +76,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1beta1.RunFunctionRe
 		return rsp, nil
 	}
 
-	desired["logging"] = &resource.DesiredComposed{Resource: cd}
+	desired["logging"] = &resource.DesiredComposed{Resource: cd, Ready: resource.ReadyTrue}
 
 	f.log.Info("Desired composed resources", "desired", desired)
 
