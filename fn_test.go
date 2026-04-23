@@ -85,7 +85,7 @@ func TestRunFunction(t *testing.T) {
 										"configCheck": {
 											"timeoutSeconds": 0
 										},
-										"enableDockerParserCompatibilityForCRI": false,
+										"enableDockerParserCompatibilityForCRI": true,
 										"enableRecreateWorkloadOnImmutableFieldChange": false,
 										"flowConfigCheckDisabled": false,
 										"skipInvalidResources": false

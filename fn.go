@@ -69,6 +69,7 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1.RunFunctionRequest
 	l.Spec.ControlNamespace = ns
 	l.Spec.WatchNamespaceSelector = &metav1.LabelSelector{}
 	l.Spec.WatchNamespaceSelector.MatchLabels = map[string]string{in.NamespaceLabel: projectid}
+	l.Spec.EnableDockerParserCompatibilityForCRI = true
 
 	cd, err := composed.From(l)
 	if err != nil {
