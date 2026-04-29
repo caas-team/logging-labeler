@@ -15,9 +15,19 @@ import (
 
 	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
 	"github.com/crossplane/function-sdk-go/resource"
+	"github.com/crossplane/function-sdk-go/resource/composed"
 	"github.com/crossplane/function-sdk-go/response"
 	inputv1beta1 "github.com/crossplane/logging-labeler/input/v1beta1"
+	loggingv1beta1 "github.com/kube-logging/logging-operator/pkg/sdk/logging/api/v1beta1"
 )
+
+func init() {
+	// Mirror the startup-time registration done in main.Run so tests can
+	// convert logging-operator types via composed.From.
+	if err := loggingv1beta1.AddToScheme(composed.Scheme); err != nil {
+		panic(err)
+	}
+}
 
 func TestRunFunction(t *testing.T) {
 	type args struct {

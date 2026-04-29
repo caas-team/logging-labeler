@@ -46,11 +46,6 @@ func (f *Function) RunFunction(ctx context.Context, req *fnv1.RunFunctionRequest
 		return rsp, nil
 	}
 
-	if err := v1beta1.AddToScheme(composed.Scheme); err != nil {
-		response.Fatal(rsp, errors.Wrapf(err, "cannot add to scheme"))
-		return rsp, nil
-	}
-
 	ns := xr.Resource.GetClaimReference().Namespace
 
 	targetns, err := f.cs.CoreV1().Namespaces().Get(ctx, ns, metav1.GetOptions{})
