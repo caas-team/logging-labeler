@@ -113,7 +113,7 @@ func TestRunFunction(t *testing.T) {
 		},
 	}
 
-	client := fake.NewSimpleClientset()
+	client := fake.NewClientset()
 	if _, err := client.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "unit-test",
