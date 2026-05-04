@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/function-sdk-go/logging"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -13,19 +13,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	fnv1beta1 "github.com/crossplane/function-sdk-go/proto/v1beta1"
+	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
 	"github.com/crossplane/function-sdk-go/resource"
+	"github.com/crossplane/function-sdk-go/resource/composed"
 	"github.com/crossplane/function-sdk-go/response"
 	inputv1beta1 "github.com/crossplane/logging-labeler/input/v1beta1"
+	loggingv1beta1 "github.com/kube-logging/logging-operator/pkg/sdk/logging/api/v1beta1"
 )
+
+func init() {
+	// Mirror the startup-time registration done in main.Run so tests can
+	// convert logging-operator types via composed.From.
+	if err := loggingv1beta1.AddToScheme(composed.Scheme); err != nil {
+		panic(err)
+	}
+}
 
 func TestRunFunction(t *testing.T) {
 	type args struct {
 		ctx context.Context
-		req *fnv1beta1.RunFunctionRequest
+		req *fnv1.RunFunctionRequest
 	}
 	type want struct {
-		rsp *fnv1beta1.RunFunctionResponse
+		rsp *fnv1.RunFunctionResponse
 		err error
 	}
 
@@ -37,13 +47,13 @@ func TestRunFunction(t *testing.T) {
 		"ResponseIsReturned": {
 			reason: "The function should return a response with the desired state.",
 			args: args{
-				req: &fnv1beta1.RunFunctionRequest{
+				req: &fnv1.RunFunctionRequest{
 					Input: resource.MustStructObject(&inputv1beta1.Input{
 						NamespaceLabel: "testLabel",
 					}),
-					Meta: &fnv1beta1.RequestMeta{Tag: "hello"},
-					Observed: &fnv1beta1.State{
-						Composite: &fnv1beta1.Resource{
+					Meta: &fnv1.RequestMeta{Tag: "hello"},
+					Observed: &fnv1.State{
+						Composite: &fnv1.Resource{
 							Resource: resource.MustStructJSON(`{
 								"apiVersion": "caas.telekom.de/v1alpha1",
 								"kind": "XLogging",
@@ -65,12 +75,12 @@ func TestRunFunction(t *testing.T) {
 				},
 			},
 			want: want{
-				rsp: &fnv1beta1.RunFunctionResponse{
-					Meta: &fnv1beta1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(response.DefaultTTL)},
-					Desired: &fnv1beta1.State{
-						Resources: map[string]*fnv1beta1.Resource{
+				rsp: &fnv1.RunFunctionResponse{
+					Meta: &fnv1.ResponseMeta{Tag: "hello", Ttl: durationpb.New(response.DefaultTTL)},
+					Desired: &fnv1.State{
+						Resources: map[string]*fnv1.Resource{
 							"logging": {
-								Ready: fnv1beta1.Ready_READY_TRUE,
+								Ready: fnv1.Ready_READY_TRUE,
 								Resource: resource.MustStructJSON(`{
 									"apiVersion": "logging.banzaicloud.io/v1beta1",
 									"kind": "Logging",
@@ -85,6 +95,7 @@ func TestRunFunction(t *testing.T) {
 										"configCheck": {
 											"timeoutSeconds": 0
 										},
+										"enableDockerParserCompatibilityForCRI": false,
 										"enableRecreateWorkloadOnImmutableFieldChange": false,
 										"flowConfigCheckDisabled": false,
 										"skipInvalidResources": false
@@ -102,7 +113,7 @@ func TestRunFunction(t *testing.T) {
 		},
 	}
 
-	client := fake.NewSimpleClientset()
+	client := fake.NewClientset()
 	if _, err := client.CoreV1().Namespaces().Create(context.Background(), &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "unit-test",

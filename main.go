@@ -10,7 +10,10 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
+	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/crossplane/function-sdk-go"
+	"github.com/crossplane/function-sdk-go/resource/composed"
+	loggingv1beta1 "github.com/kube-logging/logging-operator/pkg/sdk/logging/api/v1beta1"
 )
 
 // CLI of this Function.
@@ -29,6 +32,13 @@ func (c *CLI) Run() error {
 	log, err := function.NewLogger(c.Debug)
 	if err != nil {
 		return err
+	}
+
+	// Register logging-operator types with the composed scheme once at
+	// startup. The scheme is a process-global, so per-request registration
+	// would race on its internal map (concurrent map writes panic).
+	if err := loggingv1beta1.AddToScheme(composed.Scheme); err != nil {
+		return errors.Wrap(err, "cannot register logging-operator types with composed scheme")
 	}
 
 	var config *rest.Config
